@@ -1,8 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcDotNetNamedPipes", "GrpcDotNetNamedPipes\GrpcDotNetNamedPipes.csproj", "{5BB6ABD5-4B0C-4EB8-AE7A-6196107FA612}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcDotNetNamedPipes", "GrpcDotNetNamedPipes\GrpcDotNetNamedPipes.csproj", "{5BB6ABD5-4B0C-4EB8-AE7A-6196107FA612}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcDotNetNamedPipes.Tests", "GrpcDotNetNamedPipes.Tests\GrpcDotNetNamedPipes.Tests.csproj", "{D7566E69-DA28-4997-9C4F-E0C0F8DD3F13}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcDotNetNamedPipes.Tests", "GrpcDotNetNamedPipes.Tests\GrpcDotNetNamedPipes.Tests.csproj", "{D7566E69-DA28-4997-9C4F-E0C0F8DD3F13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcDotnetCustomChannel", "GrpcDotnetCustomChannel\GrpcDotnetCustomChannel.csproj", "{C2E2439D-B172-4D0D-BBB5-559699D0078A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +23,15 @@ Global
 		{D7566E69-DA28-4997-9C4F-E0C0F8DD3F13}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7566E69-DA28-4997-9C4F-E0C0F8DD3F13}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7566E69-DA28-4997-9C4F-E0C0F8DD3F13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2E2439D-B172-4D0D-BBB5-559699D0078A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2E2439D-B172-4D0D-BBB5-559699D0078A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2E2439D-B172-4D0D-BBB5-559699D0078A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2E2439D-B172-4D0D-BBB5-559699D0078A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AA5557AF-273B-4D7E-A119-289E71407E76}
 	EndGlobalSection
 EndGlobal
