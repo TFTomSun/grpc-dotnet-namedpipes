@@ -17,7 +17,6 @@
 using System;
 using System.IO.Pipes;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace GrpcDotNetNamedPipes.Internal
@@ -31,20 +30,21 @@ namespace GrpcDotNetNamedPipes.Internal
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly string _pipeName;
         private readonly NamedPipeServerOptions _options;
-        private readonly Func<Channel<byte[]>, Task> _handleConnection;
+        private readonly Func<INamedPipeServerStream, Task> _handleConnection;
         private bool _started;
 
         public ServerStreamPool(string pipeName, NamedPipeServerOptions options,
-            Func<Channel<byte[]>, Task> handleConnection)
+            Func<INamedPipeServerStream, Task> handleConnection)
         {
             _pipeName = pipeName;
             _options = options;
             _handleConnection = handleConnection;
         }
 
-        private Channel<byte[]> CreatePipeServer()
+        private INamedPipeServerStream CreatePipeServer()
         {
-            return Channel.CreateUnbounded<byte[]>(); 
+
+            return NamedPipeStreamFactory.Create(_pipeName,_options);
         }
 
         public void Start()
@@ -68,14 +68,14 @@ namespace GrpcDotNetNamedPipes.Internal
             thread.Start();
         }
 
-        private async void ConnectionLoop()
+        private void ConnectionLoop()
         {
             int fallback = FallbackMin;
             while (true)
             {
                 try
                 {
-                    await ListenForConnectionAsync();
+                    ListenForConnection();
                     fallback = FallbackMin;
                 }
                 catch (Exception)
@@ -91,16 +91,16 @@ namespace GrpcDotNetNamedPipes.Internal
             }
         }
 
-        private async Task ListenForConnectionAsync()
+        private void ListenForConnection()
         {
             var pipeServer = CreatePipeServer();
-            await pipeServer.Reader.WaitToReadAsync();
+            pipeServer.WaitForConnectionAsync(_cts.Token).Wait();
             Task.Run(() =>
             {
                 try
                 {
                     _handleConnection(pipeServer).Wait();
-                    //pipeServer.Disconnect();
+                    pipeServer.Disconnect();
                 }
                 catch (Exception)
                 {
@@ -108,7 +108,7 @@ namespace GrpcDotNetNamedPipes.Internal
                 }
                 finally
                 {
-                    //pipeServer..Dispose();
+                    pipeServer.Dispose();
                 }
             });
         }

@@ -45,16 +45,8 @@ namespace GrpcDotNetNamedPipes
             Method<TRequest, TResponse> method, CallOptions callOptions, TRequest request)
             where TRequest : class where TResponse : class
         {
-            var pipeOptions = PipeOptions.Asynchronous;
-#if NETCOREAPP || NETSTANDARD2_1
-            if (_options.CurrentUserOnly)
-            {
-                pipeOptions |= PipeOptions.CurrentUserOnly;
-            }
-#endif
 
-            var stream = new NamedPipeClientStream(_serverName, _pipeName, PipeDirection.InOut,
-                pipeOptions, _options.ImpersonationLevel, HandleInheritability.None);
+            var stream = NamedPipeStreamFactory.CreateClient(_serverName,_pipeName,_options);
 
             try
             {

@@ -22,12 +22,12 @@ namespace GrpcDotNetNamedPipes.Internal
 {
     public class PipeReader
     {
-        private readonly PipeStream _pipeStream;
+        private readonly IPipeStream _pipeStream;
         private readonly TransportMessageHandler _messageHandler;
         private readonly Action _onDisconnected;
         private readonly NamedPipeTransport _transport;
 
-        public PipeReader(PipeStream pipeStream, TransportMessageHandler messageHandler, Action onDisconnected)
+        public PipeReader(IPipeStream pipeStream, TransportMessageHandler messageHandler, Action onDisconnected)
         {
             _pipeStream = pipeStream;
             _messageHandler = messageHandler;

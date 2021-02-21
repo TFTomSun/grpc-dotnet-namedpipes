@@ -17,7 +17,6 @@
 using System;
 using System.IO.Pipes;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Grpc.Core;
 
@@ -25,7 +24,7 @@ namespace GrpcDotNetNamedPipes.Internal
 {
     internal class ClientConnectionContext : TransportMessageHandler, IDisposable
     {
-        private readonly Channel<byte[]> _pipeStream;
+        private readonly INamedPipeClientStream _pipeStream;
         private readonly CallOptions _callOptions;
         private readonly bool _isServerUnary;
         private readonly PayloadQueue _payloadQueue;
@@ -40,7 +39,7 @@ namespace GrpcDotNetNamedPipes.Internal
         private Metadata _responseTrailers;
         private Status _status;
 
-        public ClientConnectionContext(Channel<byte[]> pipeStream, CallOptions callOptions, bool isServerUnary, int connectionTimeout)
+        public ClientConnectionContext(INamedPipeClientStream pipeStream, CallOptions callOptions, bool isServerUnary, int connectionTimeout)
         {
             _pipeStream = pipeStream;
             _callOptions = callOptions;
@@ -62,8 +61,8 @@ namespace GrpcDotNetNamedPipes.Internal
                 return;
             }
 
-            //_pipeStream.Connect(_connectionTimeout);
-            //_pipeStream.ReadMode = PipeTransmissionMode.Message;
+            _pipeStream.Connect(_connectionTimeout);
+            _pipeStream.ReadMode = PipeTransmissionMode.Message;
 
             if (request != null)
             {
@@ -96,7 +95,7 @@ namespace GrpcDotNetNamedPipes.Internal
             _responseTrailers = trailers ?? new Metadata();
             _status = status;
             
-            //_pipeStream.Close();
+            _pipeStream.Close();
 
             if (_pendingPayload != null)
             {
@@ -165,7 +164,7 @@ namespace GrpcDotNetNamedPipes.Internal
 
         public void Dispose()
         {
-            //_pipeStream.Dispose();
+            _pipeStream.Dispose();
             _cancelReg.Dispose();
         }
     }

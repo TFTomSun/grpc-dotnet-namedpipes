@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Grpc.Core;
 
@@ -29,7 +28,7 @@ namespace GrpcDotNetNamedPipes.Internal
         private readonly Dictionary<string, Func<ServerConnectionContext, Task>> _methodHandlers;
         private readonly PayloadQueue _payloadQueue;
 
-        public ServerConnectionContext(Channel<byte[]> pipeStream,
+        public ServerConnectionContext(INamedPipeServerStream pipeStream,
             Dictionary<string, Func<ServerConnectionContext, Task>> methodHandlers)
         {
             CallContext = new NamedPipeCallContext(this);
@@ -40,7 +39,7 @@ namespace GrpcDotNetNamedPipes.Internal
             CancellationTokenSource = new CancellationTokenSource();
         }
 
-        public Channel<byte[]> PipeStream { get; }
+        public INamedPipeServerStream PipeStream { get; }
 
         public NamedPipeTransport Transport { get; }
 
@@ -122,7 +121,7 @@ namespace GrpcDotNetNamedPipes.Internal
 
         public void Dispose()
         {
-            //PipeStream?.Dispose();
+            PipeStream?.Dispose();
         }
     }
 }

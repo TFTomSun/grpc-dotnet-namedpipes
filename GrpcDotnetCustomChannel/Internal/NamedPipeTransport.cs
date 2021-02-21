@@ -17,7 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Channels;
+using System.IO.Pipes;
 using System.Threading.Tasks;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
@@ -32,10 +32,10 @@ namespace GrpcDotNetNamedPipes.Internal
         private const int PayloadInSeparatePacketThreshold = 15 * 1024; // 15 kiB
         private const int MessageBufferSize = 16 * 1024; // 16 kiB
 
-        //private readonly byte[] _messageBuffer = new byte[MessageBufferSize];
-        private readonly Channel<byte[]> _pipeStream;
+        private readonly byte[] _messageBuffer = new byte[MessageBufferSize];
+        private readonly IPipeStream _pipeStream;
 
-        public NamedPipeTransport(Channel<byte[]> pipeStream)
+        public NamedPipeTransport(IPipeStream pipeStream)
         {
             _pipeStream = pipeStream;
         }
@@ -43,11 +43,11 @@ namespace GrpcDotNetNamedPipes.Internal
         private async Task<MemoryStream> ReadPacketFromPipe()
         {
             var packet = new MemoryStream();
-            //do
-            //{
-                var readBytes = await _pipeStream.Reader.ReadAsync().ConfigureAwait(false);
-                packet.Write(readBytes, 0, readBytes.Length);
-            //} while (!_pipeStream.IsMessageComplete);
+            do
+            {
+                int readBytes = await _pipeStream.ReadAsync(_messageBuffer, 0, MessageBufferSize).ConfigureAwait(false);
+                packet.Write(_messageBuffer, 0, readBytes);
+            } while (!_pipeStream.IsMessageComplete);
 
             packet.Position = 0;
             return packet;
@@ -78,7 +78,7 @@ namespace GrpcDotNetNamedPipes.Internal
                         }
                         else
                         {
-                            payload = await _pipeStream.Reader.ReadAsync();
+                            _pipeStream.Read(payload, 0, payload.Length);
                         }
 
                         messageHandler.HandlePayload(payload);
@@ -131,11 +131,11 @@ namespace GrpcDotNetNamedPipes.Internal
 
         internal class WriteTransaction
         {
-            private readonly Channel<byte[]> _pipeStream;
+            private readonly IPipeStream _pipeStream;
             private readonly MemoryStream _packetBuffer = new MemoryStream();
             private readonly List<byte[]> _trailingPayloads = new List<byte[]>();
 
-            public WriteTransaction(Channel<byte[]> pipeStream)
+            public WriteTransaction(IPipeStream pipeStream)
             {
                 _pipeStream = pipeStream;
             }
@@ -152,12 +152,12 @@ namespace GrpcDotNetNamedPipes.Internal
                 {
                     if (_packetBuffer.Length > 0)
                     {
-                        _pipeStream.Writer.WriteAsync(_packetBuffer.ToArray());
+                        _packetBuffer.WriteTo(_pipeStream.AsWritableStream());
                     }
 
                     foreach (var payload in _trailingPayloads)
                     {
-                        _pipeStream.Writer.WriteAsync(payload);
+                        _pipeStream.Write(payload, 0, payload.Length);
                     }
                 }
             }
