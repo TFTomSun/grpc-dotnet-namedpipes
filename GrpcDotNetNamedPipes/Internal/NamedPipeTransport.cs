@@ -33,9 +33,9 @@ namespace GrpcDotNetNamedPipes.Internal
         private const int MessageBufferSize = 16 * 1024; // 16 kiB
 
         private readonly byte[] _messageBuffer = new byte[MessageBufferSize];
-        private readonly PipeStream _pipeStream;
+        private readonly IPipeStream _pipeStream;
 
-        public NamedPipeTransport(PipeStream pipeStream)
+        public NamedPipeTransport(IPipeStream pipeStream)
         {
             _pipeStream = pipeStream;
         }
@@ -131,11 +131,11 @@ namespace GrpcDotNetNamedPipes.Internal
 
         internal class WriteTransaction
         {
-            private readonly PipeStream _pipeStream;
+            private readonly IPipeStream _pipeStream;
             private readonly MemoryStream _packetBuffer = new MemoryStream();
             private readonly List<byte[]> _trailingPayloads = new List<byte[]>();
 
-            public WriteTransaction(PipeStream pipeStream)
+            public WriteTransaction(IPipeStream pipeStream)
             {
                 _pipeStream = pipeStream;
             }
@@ -152,7 +152,7 @@ namespace GrpcDotNetNamedPipes.Internal
                 {
                     if (_packetBuffer.Length > 0)
                     {
-                        _packetBuffer.WriteTo(_pipeStream);
+                        _packetBuffer.WriteTo(_pipeStream.AsWritableStream());
                     }
 
                     foreach (var payload in _trailingPayloads)

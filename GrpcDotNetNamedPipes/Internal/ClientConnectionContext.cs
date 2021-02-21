@@ -24,7 +24,7 @@ namespace GrpcDotNetNamedPipes.Internal
 {
     internal class ClientConnectionContext : TransportMessageHandler, IDisposable
     {
-        private readonly NamedPipeClientStream _pipeStream;
+        private readonly INamedPipeClientStream _pipeStream;
         private readonly CallOptions _callOptions;
         private readonly bool _isServerUnary;
         private readonly PayloadQueue _payloadQueue;
@@ -39,7 +39,7 @@ namespace GrpcDotNetNamedPipes.Internal
         private Metadata _responseTrailers;
         private Status _status;
 
-        public ClientConnectionContext(NamedPipeClientStream pipeStream, CallOptions callOptions, bool isServerUnary, int connectionTimeout)
+        public ClientConnectionContext(INamedPipeClientStream pipeStream, CallOptions callOptions, bool isServerUnary, int connectionTimeout)
         {
             _pipeStream = pipeStream;
             _callOptions = callOptions;

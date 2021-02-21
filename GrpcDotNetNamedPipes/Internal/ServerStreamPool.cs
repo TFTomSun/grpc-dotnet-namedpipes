@@ -23,62 +23,28 @@ namespace GrpcDotNetNamedPipes.Internal
 {
     internal class ServerStreamPool : IDisposable
     {
+        public Func<INamedPipeServerStream> Factory { get; }
         private const int PoolSize = 4;
         private const int FallbackMin = 100;
         private const int FallbackMax = 10_000;
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        private readonly string _pipeName;
-        private readonly NamedPipeServerOptions _options;
-        private readonly Func<NamedPipeServerStream, Task> _handleConnection;
+        private readonly Func<INamedPipeServerStream, Task> _handleConnection;
         private bool _started;
 
-        public ServerStreamPool(string pipeName, NamedPipeServerOptions options,
-            Func<NamedPipeServerStream, Task> handleConnection)
+        public ServerStreamPool(Func<INamedPipeServerStream> factory,
+            Func<INamedPipeServerStream, Task> handleConnection)
         {
-            _pipeName = pipeName;
-            _options = options;
+            Factory = factory;
             _handleConnection = handleConnection;
         }
 
-        private NamedPipeServerStream CreatePipeServer()
-        {
-            var pipeOptions = PipeOptions.Asynchronous;
-#if NETCOREAPP || NETSTANDARD
-#if !NETSTANDARD2_0
-            if (_options.CurrentUserOnly)
-            {
-                pipeOptions |= PipeOptions.CurrentUserOnly;
-            }
-#endif
 
-#if NET5_0
-            return NamedPipeServerStreamAcl.Create(_pipeName,
-                PipeDirection.InOut,
-                NamedPipeServerStream.MaxAllowedServerInstances,
-                PipeTransmissionMode.Message,
-                pipeOptions,
-                0,
-                0,
-                _options.PipeSecurity);
-#else
-            return new NamedPipeServerStream(_pipeName,
-                PipeDirection.InOut,
-                NamedPipeServerStream.MaxAllowedServerInstances,
-                PipeTransmissionMode.Message,
-                pipeOptions);
-#endif
-#endif
-#if NETFRAMEWORK
-            return new NamedPipeServerStream(_pipeName,
-                PipeDirection.InOut,
-                NamedPipeServerStream.MaxAllowedServerInstances,
-                PipeTransmissionMode.Message,
-                pipeOptions,
-                0,
-                0,
-                _options.PipeSecurity);
-#endif
+
+        private INamedPipeServerStream CreatePipeServer()
+        {
+
+            return Factory();
         }
 
         public void Start()

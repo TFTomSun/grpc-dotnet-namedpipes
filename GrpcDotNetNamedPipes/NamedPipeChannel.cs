@@ -25,41 +25,38 @@ namespace GrpcDotNetNamedPipes
 {
     public class NamedPipeChannel : CallInvoker
     {
-        private readonly string _serverName;
-        private readonly string _pipeName;
-        private readonly NamedPipeChannelOptions _options;
+        private Func<INamedPipeClientStream> ClientStreamFactory { get; }
 
         public NamedPipeChannel(string serverName, string pipeName)
             : this(serverName, pipeName, new NamedPipeChannelOptions())
         {
         }
 
-        public NamedPipeChannel(string serverName, string pipeName, NamedPipeChannelOptions options)
+        public NamedPipeChannel(string serverName, string pipeName, NamedPipeChannelOptions options):
+            this(()=> NamedPipeStreamFactory.CreateClient(serverName, pipeName, options) ,options.ConnectionTimeout)
         {
-            _serverName = serverName;
-            _pipeName = pipeName;
-            _options = options;
+            this.ConnectionTimeout = options.ConnectionTimeout;
+        }
+
+        public int ConnectionTimeout { get;  }
+
+        public NamedPipeChannel(Func<INamedPipeClientStream> clientStreamFactory, int connectionTimeout)
+        {
+            ClientStreamFactory = clientStreamFactory;
+            ConnectionTimeout = connectionTimeout;
         }
 
         private ClientConnectionContext CreateConnectionContext<TRequest, TResponse>(
             Method<TRequest, TResponse> method, CallOptions callOptions, TRequest request)
             where TRequest : class where TResponse : class
         {
-            var pipeOptions = PipeOptions.Asynchronous;
-#if NETCOREAPP || NETSTANDARD2_1
-            if (_options.CurrentUserOnly)
-            {
-                pipeOptions |= PipeOptions.CurrentUserOnly;
-            }
-#endif
 
-            var stream = new NamedPipeClientStream(_serverName, _pipeName, PipeDirection.InOut,
-                pipeOptions, _options.ImpersonationLevel, HandleInheritability.None);
+            var stream = ClientStreamFactory();
 
             try
             {
                 bool isServerUnary = method.Type == MethodType.Unary || method.Type == MethodType.ClientStreaming;
-                var ctx = new ClientConnectionContext(stream, callOptions, isServerUnary, _options.ConnectionTimeout);
+                var ctx = new ClientConnectionContext(stream, callOptions, isServerUnary, ConnectionTimeout);
                 ctx.InitCall(method, request);
                 Task.Run(new PipeReader(stream, ctx, ctx.Dispose).ReadLoop);
                 return ctx;

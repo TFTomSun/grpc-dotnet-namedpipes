@@ -35,10 +35,19 @@ namespace GrpcDotNetNamedPipes
         }
 
         public NamedPipeServer(string pipeName, NamedPipeServerOptions options)
+        :this(()=>NamedPipeStreamFactory.Create(pipeName,options))
         {
-            _pool = new ServerStreamPool(pipeName, options, HandleConnection);
+        }
+
+
+        public NamedPipeServer(Func<INamedPipeServerStream> factory)
+        {
+            _pool = new ServerStreamPool(factory, HandleConnection);
             ServiceBinder = new ServiceBinderImpl(this);
         }
+
+
+     
 
         public ServiceBinderBase ServiceBinder { get; }
 
@@ -57,7 +66,7 @@ namespace GrpcDotNetNamedPipes
             _pool.Dispose();
         }
 
-        private async Task HandleConnection(NamedPipeServerStream pipeStream)
+        private async Task HandleConnection(INamedPipeServerStream pipeStream)
         {
             var ctx = new ServerConnectionContext(pipeStream, _methodHandlers);
             await Task.Run(new PipeReader(pipeStream, ctx, ctx.Dispose).ReadLoop);

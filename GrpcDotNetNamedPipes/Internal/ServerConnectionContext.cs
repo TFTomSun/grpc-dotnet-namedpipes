@@ -28,7 +28,7 @@ namespace GrpcDotNetNamedPipes.Internal
         private readonly Dictionary<string, Func<ServerConnectionContext, Task>> _methodHandlers;
         private readonly PayloadQueue _payloadQueue;
 
-        public ServerConnectionContext(NamedPipeServerStream pipeStream,
+        public ServerConnectionContext(INamedPipeServerStream pipeStream,
             Dictionary<string, Func<ServerConnectionContext, Task>> methodHandlers)
         {
             CallContext = new NamedPipeCallContext(this);
@@ -39,7 +39,7 @@ namespace GrpcDotNetNamedPipes.Internal
             CancellationTokenSource = new CancellationTokenSource();
         }
 
-        public NamedPipeServerStream PipeStream { get; }
+        public INamedPipeServerStream PipeStream { get; }
 
         public NamedPipeTransport Transport { get; }
 
